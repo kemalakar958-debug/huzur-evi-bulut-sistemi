@@ -1,0 +1,3 @@
+import Link from 'next/link';
+const groups=[{title:'Günlük İşler',items:[['Ana Panel','/dashboard','🏠'],['Hasta Listesi','/patients','👥'],['İlaçlar','/medications','💊'],['İş Akışı','/workflow','🔄']]},{title:'Depo ve İstem',items:[['Revir Deposu','/depot','🏬']]}];
+export default function Sidebar(){return <aside className="sidebar"><div className="logo"><div className="logoIcon">🏥</div><div><h1>İlgi Klinik Bulut</h1><span>v27 çoklu kullanıcı</span></div></div>{groups.map(g=><div key={g.title}><div className="navTitle">{g.title}</div>{g.items.map(([label,href,icon])=><Link className="navBtn" href={href} key={href}><span>{icon}</span><span>{label}</span></Link>)}</div>)}</aside>}
