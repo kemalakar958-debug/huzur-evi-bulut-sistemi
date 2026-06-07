@@ -1,0 +1,6 @@
+
+/* Bu bölümü mevcut app/globals.css dosyasının en altına ekle */
+.emergencyCard{border:2px solid #f04438;background:#fff7f7;border-radius:24px;padding:18px}
+.mobileBar{display:none;position:fixed;left:10px;right:10px;bottom:10px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);border-radius:22px;padding:8px;z-index:20;justify-content:space-around}
+.mobileBar a{font-weight:900;font-size:12px;padding:8px}
+@media(max-width:900px){.main{padding-bottom:88px}.mobileBar{display:flex}}

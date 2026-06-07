@@ -1,4 +1,36 @@
 'use client';
-import {useState} from 'react';
-import {supabase} from '@/lib/supabaseClient';
-export default function LoginPage(){const[email,setEmail]=useState('');const[password,setPassword]=useState('');const[message,setMessage]=useState('');async function login(){setMessage('Giriş yapılıyor...');const{error}=await supabase.auth.signInWithPassword({email,password});if(error)return setMessage(error.message);window.location.href='/dashboard'}return <div style={{minHeight:'100vh',display:'grid',placeItems:'center',padding:18}}><div className="panel" style={{width:420,maxWidth:'100%'}}><h1>İlgi Klinik Bulut</h1><p>Çoklu kullanıcı giriş ekranı</p><label>E-posta</label><input value={email} onChange={e=>setEmail(e.target.value)} placeholder="ornek@kurum.com"/><label>Şifre</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)}/><div className="actions"><button className="primary" onClick={login}>Giriş Yap</button></div>{message&&<div className="notice">{message}</div>}</div></div>}
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabaseClient';
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [message, setMessage] = useState('');
+
+  async function login() {
+    setMessage('Giriş yapılıyor...');
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return setMessage('Giriş başarısız: ' + error.message);
+    window.location.href = '/dashboard';
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 18 }}>
+      <div className="panel" style={{ width: 440, maxWidth: '100%' }}>
+        <h1>İlgi Klinik Bulut</h1>
+        <p>Çoklu kullanıcı giriş ekranı</p>
+        <label>E-posta</label>
+        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ornek@kurum.com" />
+        <label>Şifre</label>
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <div className="actions">
+          <button className="primary" onClick={login}>Giriş Yap</button>
+          <Link className="btn soft" href="/reset-password">Şifremi Unuttum</Link>
+        </div>
+        {message && <div className="notice">{message}</div>}
+      </div>
+    </div>
+  );
+}
