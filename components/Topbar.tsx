@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { setStoredActiveFacilityId } from '@/lib/activeFacility';
 
 type Profile = {
   role: string | null;
@@ -20,9 +21,7 @@ export default function Topbar() {
   const [activeFacilityId, setActiveFacilityId] = useState<string>('general');
   const [email, setEmail] = useState<string>('');
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   async function load() {
     const { data: userData } = await supabase.auth.getUser();
@@ -53,9 +52,7 @@ export default function Topbar() {
       setActiveFacilityId(saved || 'general');
     } else if (profileRow?.facility_id) {
       setActiveFacilityId(profileRow.facility_id);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('activeFacilityId', profileRow.facility_id);
-      }
+      setStoredActiveFacilityId(profileRow.facility_id);
     }
   }
 
@@ -80,10 +77,7 @@ export default function Topbar() {
 
   function changeFounderFacility(value: string) {
     setActiveFacilityId(value);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('activeFacilityId', value);
-      window.dispatchEvent(new Event('activeFacilityChanged'));
-    }
+    setStoredActiveFacilityId(value);
   }
 
   async function logout() {
@@ -94,7 +88,7 @@ export default function Topbar() {
   return (
     <header className="topbar">
       <div className="topbarSearch">
-        🔎 Bulut sistem aktif
+        🔎 Aktif filtre: <b style={{ marginLeft: 6 }}>{activeFacilityName()}</b>
       </div>
 
       <div className="topbarContext">
@@ -111,9 +105,7 @@ export default function Topbar() {
           >
             <option value="general">Genel Kontrol</option>
             {facilities.map((facility) => (
-              <option key={facility.id} value={facility.id}>
-                {facility.name}
-              </option>
+              <option key={facility.id} value={facility.id}>{facility.name}</option>
             ))}
           </select>
         )}
