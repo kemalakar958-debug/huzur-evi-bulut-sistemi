@@ -1,0 +1,1 @@
+v35.1 admissions TypeScript düzeltmesi. Sadece app/admissions/page.tsx dosyasını üzerine yazın. SQL gerekmez.

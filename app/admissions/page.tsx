@@ -53,9 +53,7 @@ export default function AdmissionsPage() {
     note: '',
   });
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   async function load() {
     const { data: f } = await supabase.from('facilities').select('*').order('name');
@@ -64,10 +62,7 @@ export default function AdmissionsPage() {
     const { data: p } = await supabase.from('patients').select('id, facility_id, full_name, room_no, bed_no').order('full_name');
     setPatients(p || []);
 
-    if (f?.[0]) {
-      setAdmissionForm((old) => ({ ...old, facility_id: old.facility_id || f[0].id }));
-    }
-
+    if (f?.[0]) setAdmissionForm((old) => ({ ...old, facility_id: old.facility_id || f[0].id }));
     if (p?.[0]) {
       setAdmissionForm((old) => ({ ...old, patient_id: old.patient_id || p[0].id }));
       setExitForm((old) => ({ ...old, patient_id: old.patient_id || p[0].id }));
@@ -82,11 +77,7 @@ export default function AdmissionsPage() {
 
   async function saveAdmission() {
     const patient = patients.find((p) => p.id === admissionForm.patient_id);
-
-    const payload = {
-      ...admissionForm,
-      patient_name: patient?.full_name || null,
-    };
+    const payload = { ...admissionForm, patient_name: patient?.full_name || null };
 
     const { error } = await supabase.from('admission_records').insert(payload);
     if (error) return alert(error.message);
@@ -125,26 +116,17 @@ export default function AdmissionsPage() {
     const patient = patients.find((p) => p.id === exitForm.patient_id);
     if (!patient) return alert('Hasta seç.');
 
-    const { error } = await supabase.from('exit_records').insert({
-      facility_id: patient.facility_id,
-      patient_id: patient.id,
-      patient_name: patient.full_name,
+    const exitPayload = {
       ...exitForm,
-    });
+      facility_id: patient.facility_id,
+      patient_name: patient.full_name,
+    };
 
+    const { error } = await supabase.from('exit_records').insert(exitPayload);
     if (error) return alert(error.message);
 
-    const nextStatus =
-      exitForm.exit_type === 'Vefat'
-        ? 'Vefat'
-        : exitForm.exit_type === 'Nakil'
-          ? 'Nakil'
-          : 'Taburcu';
-
-    await supabase
-      .from('patients')
-      .update({ status: nextStatus })
-      .eq('id', patient.id);
+    const nextStatus = exitForm.exit_type === 'Vefat' ? 'Vefat' : exitForm.exit_type === 'Nakil' ? 'Nakil' : 'Taburcu';
+    await supabase.from('patients').update({ status: nextStatus }).eq('id', patient.id);
 
     setExitForm((old) => ({
       ...old,
@@ -195,39 +177,13 @@ export default function AdmissionsPage() {
 
       {tab === 'admission' && (
         <div className="panel">
-          <div className="panelHead">
-            <div>
-              <h2>Yeni Hasta Kabul Kaydı</h2>
-              <p>Kabul, oda yerleşim ve ilk değerlendirme kontrolü.</p>
-            </div>
-          </div>
+          <div className="panelHead"><div><h2>Yeni Hasta Kabul Kaydı</h2><p>Kabul, oda yerleşim ve ilk değerlendirme kontrolü.</p></div></div>
 
           <div className="grid grid4">
-            <div>
-              <label>Kurum</label>
-              <select value={admissionForm.facility_id} onChange={(e) => setAdmissionForm({ ...admissionForm, facility_id: e.target.value })}>
-                {facilities.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-              </select>
-            </div>
-
-            <div>
-              <label>Hasta</label>
-              <select value={admissionForm.patient_id} onChange={(e) => setAdmissionForm({ ...admissionForm, patient_id: e.target.value })}>
-                {patients.map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
-              </select>
-            </div>
-
+            <div><label>Kurum</label><select value={admissionForm.facility_id} onChange={(e) => setAdmissionForm({ ...admissionForm, facility_id: e.target.value })}>{facilities.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select></div>
+            <div><label>Hasta</label><select value={admissionForm.patient_id} onChange={(e) => setAdmissionForm({ ...admissionForm, patient_id: e.target.value })}>{patients.map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}</select></div>
             <div><label>Kabul Tarihi</label><input type="date" value={admissionForm.admission_date} onChange={(e) => setAdmissionForm({ ...admissionForm, admission_date: e.target.value })} /></div>
-
-            <div>
-              <label>Kabul Türü</label>
-              <select value={admissionForm.admission_type} onChange={(e) => setAdmissionForm({ ...admissionForm, admission_type: e.target.value })}>
-                <option>Yeni Kabul</option>
-                <option>Nakilden Geliş</option>
-                <option>Hastaneden Dönüş</option>
-                <option>Geçici Kabul</option>
-              </select>
-            </div>
+            <div><label>Kabul Türü</label><select value={admissionForm.admission_type} onChange={(e) => setAdmissionForm({ ...admissionForm, admission_type: e.target.value })}><option>Yeni Kabul</option><option>Nakilden Geliş</option><option>Hastaneden Dönüş</option><option>Geçici Kabul</option></select></div>
           </div>
 
           <div className="grid grid4">
@@ -248,81 +204,32 @@ export default function AdmissionsPage() {
           </div>
 
           <div className="grid grid4">
-            <div>
-              <label>Emanet Kontrol</label>
-              <select value={admissionForm.belongings_checked} onChange={(e) => setAdmissionForm({ ...admissionForm, belongings_checked: e.target.value })}>
-                <option>Hayır</option><option>Evet</option>
-              </select>
-            </div>
-            <div>
-              <label>Evrak Kontrol</label>
-              <select value={admissionForm.documents_checked} onChange={(e) => setAdmissionForm({ ...admissionForm, documents_checked: e.target.value })}>
-                <option>Hayır</option><option>Evet</option>
-              </select>
-            </div>
-            <div>
-              <label>Onam / Sözleşme</label>
-              <select value={admissionForm.consent_checked} onChange={(e) => setAdmissionForm({ ...admissionForm, consent_checked: e.target.value })}>
-                <option>Hayır</option><option>Evet</option>
-              </select>
-            </div>
+            <div><label>Emanet Kontrol</label><select value={admissionForm.belongings_checked} onChange={(e) => setAdmissionForm({ ...admissionForm, belongings_checked: e.target.value })}><option>Hayır</option><option>Evet</option></select></div>
+            <div><label>Evrak Kontrol</label><select value={admissionForm.documents_checked} onChange={(e) => setAdmissionForm({ ...admissionForm, documents_checked: e.target.value })}><option>Hayır</option><option>Evet</option></select></div>
+            <div><label>Onam / Sözleşme</label><select value={admissionForm.consent_checked} onChange={(e) => setAdmissionForm({ ...admissionForm, consent_checked: e.target.value })}><option>Hayır</option><option>Evet</option></select></div>
             <div><label>Not</label><input value={admissionForm.note} onChange={(e) => setAdmissionForm({ ...admissionForm, note: e.target.value })} /></div>
           </div>
 
-          <div className="actions">
-            <button className="primary" onClick={saveAdmission}>Hasta Kabul Kaydet</button>
-          </div>
+          <div className="actions"><button className="primary" onClick={saveAdmission}>Hasta Kabul Kaydet</button></div>
         </div>
       )}
 
       {tab === 'exit' && (
         <div className="panel">
-          <div className="panelHead">
-            <div>
-              <h2>Ayrılış / Taburcu / Vefat Kaydı</h2>
-              <p>Hasta çıkış, nakil, vefat ve arşiv kaydı.</p>
-            </div>
-          </div>
+          <div className="panelHead"><div><h2>Ayrılış / Taburcu / Vefat Kaydı</h2><p>Hasta çıkış, nakil, vefat ve arşiv kaydı.</p></div></div>
 
           <div className="grid grid4">
-            <div>
-              <label>Hasta</label>
-              <select value={exitForm.patient_id} onChange={(e) => setExitForm({ ...exitForm, patient_id: e.target.value })}>
-                {patients.map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
-              </select>
-            </div>
-
+            <div><label>Hasta</label><select value={exitForm.patient_id} onChange={(e) => setExitForm({ ...exitForm, patient_id: e.target.value })}>{patients.map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}</select></div>
             <div><label>Ayrılış Tarihi</label><input type="date" value={exitForm.exit_date} onChange={(e) => setExitForm({ ...exitForm, exit_date: e.target.value })} /></div>
-
-            <div>
-              <label>Ayrılış Türü</label>
-              <select value={exitForm.exit_type} onChange={(e) => setExitForm({ ...exitForm, exit_type: e.target.value })}>
-                <option>Taburcu</option>
-                <option>Nakil</option>
-                <option>Vefat</option>
-                <option>Kendi İsteğiyle Ayrılış</option>
-                <option>Geçici Ayrılış</option>
-              </select>
-            </div>
-
+            <div><label>Ayrılış Türü</label><select value={exitForm.exit_type} onChange={(e) => setExitForm({ ...exitForm, exit_type: e.target.value })}><option>Taburcu</option><option>Nakil</option><option>Vefat</option><option>Kendi İsteğiyle Ayrılış</option><option>Geçici Ayrılış</option></select></div>
             <div><label>Gideceği Yer / Kurum</label><input value={exitForm.destination} onChange={(e) => setExitForm({ ...exitForm, destination: e.target.value })} /></div>
           </div>
 
           <div className="grid grid4">
             <div><label>Teslim Alan / Götüren</label><input value={exitForm.taken_by} onChange={(e) => setExitForm({ ...exitForm, taken_by: e.target.value })} /></div>
             <div><label>Yakınlık</label><input value={exitForm.relation} onChange={(e) => setExitForm({ ...exitForm, relation: e.target.value })} /></div>
-            <div>
-              <label>Emanet İade</label>
-              <select value={exitForm.belongings_returned} onChange={(e) => setExitForm({ ...exitForm, belongings_returned: e.target.value })}>
-                <option>Hayır</option><option>Evet</option><option>Kısmi</option>
-              </select>
-            </div>
-            <div>
-              <label>Evrak İade</label>
-              <select value={exitForm.documents_returned} onChange={(e) => setExitForm({ ...exitForm, documents_returned: e.target.value })}>
-                <option>Hayır</option><option>Evet</option><option>Kısmi</option>
-              </select>
-            </div>
+            <div><label>Emanet İade</label><select value={exitForm.belongings_returned} onChange={(e) => setExitForm({ ...exitForm, belongings_returned: e.target.value })}><option>Hayır</option><option>Evet</option><option>Kısmi</option></select></div>
+            <div><label>Evrak İade</label><select value={exitForm.documents_returned} onChange={(e) => setExitForm({ ...exitForm, documents_returned: e.target.value })}><option>Hayır</option><option>Evet</option><option>Kısmi</option></select></div>
           </div>
 
           <div className="grid grid2">
@@ -342,65 +249,20 @@ export default function AdmissionsPage() {
             </>
           )}
 
-          <div>
-            <label>Arşiv Durumu</label>
-            <select value={exitForm.archive_status} onChange={(e) => setExitForm({ ...exitForm, archive_status: e.target.value })}>
-              <option>Arşive Alınacak</option>
-              <option>Arşive Alındı</option>
-              <option>Eksik Evrak Var</option>
-              <option>Beklemede</option>
-            </select>
-          </div>
-
-          <div className="actions">
-            <button className="red" onClick={saveExit}>Ayrılış / Vefat Kaydet</button>
-          </div>
+          <div><label>Arşiv Durumu</label><select value={exitForm.archive_status} onChange={(e) => setExitForm({ ...exitForm, archive_status: e.target.value })}><option>Arşive Alınacak</option><option>Arşive Alındı</option><option>Eksik Evrak Var</option><option>Beklemede</option></select></div>
+          <div className="actions"><button className="red" onClick={saveExit}>Ayrılış / Vefat Kaydet</button></div>
         </div>
       )}
 
       <div className="grid grid2">
         <div className="panel">
           <div className="panelHead"><div><h2>Kabul Kayıtları</h2><p>{admissions.length} kayıt</p></div></div>
-          <div className="tableWrap">
-            <table>
-              <thead><tr><th>Tarih</th><th>Hasta</th><th>Tür</th><th>Oda/Yatak</th><th>Evrak</th><th>Emanet</th></tr></thead>
-              <tbody>
-                {admissions.map((r) => (
-                  <tr key={r.id}>
-                    <td>{r.admission_date}</td>
-                    <td><b>{r.patient_name || '-'}</b></td>
-                    <td>{r.admission_type}</td>
-                    <td>{r.room_no || '-'} / {r.bed_no || '-'}</td>
-                    <td>{r.documents_checked}</td>
-                    <td>{r.belongings_checked}</td>
-                  </tr>
-                ))}
-                {admissions.length === 0 && <tr><td colSpan={6}>Kayıt yok.</td></tr>}
-              </tbody>
-            </table>
-          </div>
+          <div className="tableWrap"><table><thead><tr><th>Tarih</th><th>Hasta</th><th>Tür</th><th>Oda/Yatak</th><th>Evrak</th><th>Emanet</th></tr></thead><tbody>{admissions.map((r) => <tr key={r.id}><td>{r.admission_date}</td><td><b>{r.patient_name || '-'}</b></td><td>{r.admission_type}</td><td>{r.room_no || '-'} / {r.bed_no || '-'}</td><td>{r.documents_checked}</td><td>{r.belongings_checked}</td></tr>)}{admissions.length === 0 && <tr><td colSpan={6}>Kayıt yok.</td></tr>}</tbody></table></div>
         </div>
 
         <div className="panel">
           <div className="panelHead"><div><h2>Ayrılış / Vefat Kayıtları</h2><p>{exits.length} kayıt</p></div></div>
-          <div className="tableWrap">
-            <table>
-              <thead><tr><th>Tarih</th><th>Hasta</th><th>Tür</th><th>Yer</th><th>Emanet</th><th>Arşiv</th></tr></thead>
-              <tbody>
-                {exits.map((r) => (
-                  <tr key={r.id}>
-                    <td>{r.exit_date}</td>
-                    <td><b>{r.patient_name || '-'}</b></td>
-                    <td><span className={`pill ${r.exit_type === 'Vefat' ? 'danger' : r.exit_type === 'Nakil' ? 'warn' : 'ok'}`}>{r.exit_type}</span></td>
-                    <td>{r.destination || '-'}</td>
-                    <td>{r.belongings_returned}</td>
-                    <td>{r.archive_status}</td>
-                  </tr>
-                ))}
-                {exits.length === 0 && <tr><td colSpan={6}>Kayıt yok.</td></tr>}
-              </tbody>
-            </table>
-          </div>
+          <div className="tableWrap"><table><thead><tr><th>Tarih</th><th>Hasta</th><th>Tür</th><th>Yer</th><th>Emanet</th><th>Arşiv</th></tr></thead><tbody>{exits.map((r) => <tr key={r.id}><td>{r.exit_date}</td><td><b>{r.patient_name || '-'}</b></td><td><span className={`pill ${r.exit_type === 'Vefat' ? 'danger' : r.exit_type === 'Nakil' ? 'warn' : 'ok'}`}>{r.exit_type}</span></td><td>{r.destination || '-'}</td><td>{r.belongings_returned}</td><td>{r.archive_status}</td></tr>)}{exits.length === 0 && <tr><td colSpan={6}>Kayıt yok.</td></tr>}</tbody></table></div>
         </div>
       </div>
     </Shell>
