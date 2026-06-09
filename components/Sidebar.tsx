@@ -10,51 +10,59 @@ type Profile = {
   full_name?: string | null;
 };
 
-const founderMenu = [
-  ['Kurucu Dashboard Pro', '/founder-dashboard', '👑'],
-  ['Yönetim Paneli', '/management', '📊'],
-  ['Kurumlar / Ayarlar', '/facilities', '🏢'],
-  ['Rol / Kurum Ayarları', '/role-settings', '🧩'],
-  ['Kurumlar Arası İstek', '/interfacility-requests', '🔁'],
-  ['Kullanıcılar', '/users', '🔐'],
-];
+type MenuItem = [string, string, string];
 
-const managerMenu = [
-  ['Kurum Panelim', '/my-panel', '🏢'],
+const patientManagement: MenuItem[] = [
   ['Hasta Listesi', '/patients', '👥'],
   ['Hasta Kabul / Ayrılış', '/admissions', '📥'],
-  ['Tedavi Sistemi', '/treatments', '🧪'],
-  ['İlaçlar', '/medications', '💊'],
-  ['Revir Deposu', '/depot', '🏬'],
-  ['Kurumlar Arası İstek', '/interfacility-requests', '🔁'],
+  ['Ziyaretçi Takibi', '/visitors', '👪'],
 ];
 
-const clinicalMenu = [
-  ['Hasta Listesi', '/patients', '👥'],
+const clinicalCare: MenuItem[] = [
   ['Vital Takip', '/vitals', '🩺'],
   ['Tedavi Sistemi', '/treatments', '🧪'],
+  ['İlaçlar', '/medications', '💊'],
   ['Günlük Bakım', '/daily-care', '🛏️'],
   ['Beslenme / Sıvı', '/nutrition', '🍽️'],
   ['Bası / Pansuman', '/wound-care', '🩹'],
   ['Olay / Düşme', '/incidents', '⚠️'],
   ['Hastane Sevk', '/transfers', '🚑'],
-  ['Görev Takip', '/tasks', '📌'],
-  ['Nöbet Teslim', '/shift-handover', '📘'],
+  ['Randevular', '/appointments', '📅'],
 ];
 
-const operationMenu = [
-  ['Emanet / Kıyafet', '/belongings', '🧳'],
-  ['Evrak Merkezi', '/documents', '📁'],
-  ['Randevular', '/appointments', '📅'],
+const elderCare: MenuItem[] = [
+  ['Bakım Planı', '/care-plans', '🧾'],
   ['Aktivite Takibi', '/activities', '🎲'],
   ['Fizik Tedavi', '/physio', '🚶'],
   ['Uyku Takibi', '/sleep', '🌙'],
   ['Davranış Takibi', '/behavior', '🧠'],
-  ['Ziyaretçi Takibi', '/visitors', '👪'],
   ['Risk Skorları', '/risk-scores', '📊'],
 ];
 
-function MenuGroup({ title, items }: { title: string; items: string[][] }) {
+const operations: MenuItem[] = [
+  ['Revir Deposu', '/depot', '🏬'],
+  ['Kurumlar Arası İstek', '/interfacility-requests', '🔁'],
+  ['Evrak Merkezi', '/documents', '📁'],
+  ['Emanet / Kıyafet', '/belongings', '🧳'],
+  ['Görev Takibi', '/tasks', '📌'],
+  ['Nöbet Teslim', '/shift-handover', '📘'],
+  ['İş Akışı', '/workflow', '🔄'],
+  ['Acil Durum', '/emergency', '🚨'],
+];
+
+const founderManagement: MenuItem[] = [
+  ['Kurucu Dashboard', '/founder-dashboard', '👑'],
+  ['Yönetim Paneli', '/management', '📊'],
+  ['Kurumlar / Ayarlar', '/facilities', '🏢'],
+  ['Rol / Kurum Ayarları', '/role-settings', '🧩'],
+  ['Kullanıcılar', '/users', '🔐'],
+];
+
+const managerManagement: MenuItem[] = [
+  ['Kurum Panelim', '/my-panel', '🏢'],
+];
+
+function MenuGroup({ title, items }: { title: string; items: MenuItem[] }) {
   if (!items.length) return null;
 
   return (
@@ -62,7 +70,8 @@ function MenuGroup({ title, items }: { title: string; items: string[][] }) {
       <div className="navTitle">{title}</div>
       {items.map(([label, href, icon]) => (
         <Link className="navBtn" href={href} key={href}>
-          <span>{icon}</span><span>{label}</span>
+          <span>{icon}</span>
+          <span>{label}</span>
         </Link>
       ))}
     </div>
@@ -92,6 +101,7 @@ export default function Sidebar() {
   }
 
   const role = profile?.role || 'viewer';
+
   const isFounder = role === 'founder';
   const isManager = role === 'manager';
   const isNurse = role === 'nurse';
@@ -103,19 +113,27 @@ export default function Sidebar() {
         <div className="logoIcon">🏥</div>
         <div>
           <h1>İlgi Klinik Bulut</h1>
-          <span>{role} panel</span>
+          <span>{role} panel • v44</span>
         </div>
       </div>
 
-      {isFounder && <MenuGroup title="Kurucu Merkezi" items={founderMenu} />}
-      {isManager && <MenuGroup title="Müdür Paneli" items={managerMenu} />}
+      {isFounder && <MenuGroup title="🏢 Yönetim Merkezi" items={founderManagement} />}
+      {isManager && <MenuGroup title="🏢 Müdür Merkezi" items={managerManagement} />}
 
       {(isFounder || isManager || isNurse || isViewer) && (
-        <MenuGroup title="Klinik İşlemler" items={clinicalMenu} />
+        <MenuGroup title="👥 Hasta Yönetimi" items={patientManagement} />
+      )}
+
+      {(isFounder || isManager || isNurse || isViewer) && (
+        <MenuGroup title="🩺 Klinik ve Bakım" items={clinicalCare} />
       )}
 
       {(isFounder || isManager || isNurse) && (
-        <MenuGroup title="Operasyon" items={operationMenu} />
+        <MenuGroup title="🧓 Yaşlı Bakım" items={elderCare} />
+      )}
+
+      {(isFounder || isManager || isNurse) && (
+        <MenuGroup title="📦 Operasyon Merkezi" items={operations} />
       )}
     </aside>
   );
