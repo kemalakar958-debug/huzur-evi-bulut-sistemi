@@ -13,7 +13,7 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="logo">
         <div className="logoIcon">🏥</div>
-        <div><h1>İlgi Klinik Bulut</h1><span>v36 kurum yönetimi</span></div>
+        <div><h1>İlgi Klinik Bulut</h1><span>v36.1 yetkili yönetim</span></div>
       </div>
       {groups.map((group) => (
         <div key={group.title}>

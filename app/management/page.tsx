@@ -2,38 +2,31 @@
 
 import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
+import AdminGuard from '@/components/AdminGuard';
 import { supabase } from '@/lib/supabaseClient';
 
 type Facility = Record<string, any>;
 
-type FacilityStats = {
-  patients: number;
-  meds: number;
-  treatments: number;
-  incidents: number;
-  transfers: number;
-  tasks: number;
-  docs: number;
-  depot: number;
-  belongings: number;
-};
-
 export default function ManagementPage() {
-  const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [stats, setStats] = useState<Record<string, FacilityStats>>({});
-  const [selectedFacility, setSelectedFacility] = useState<string>('all');
+  return (
+    <Shell>
+      <AdminGuard title="Yönetim Paneli">
+        <ManagementContent />
+      </AdminGuard>
+    </Shell>
+  );
+}
 
-  useEffect(() => {
-    load();
-  }, []);
+function ManagementContent() {
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [stats, setStats] = useState<Record<string, any>>({});
+  const [selectedFacility, setSelectedFacility] = useState('all');
+
+  useEffect(() => { load(); }, []);
 
   async function countByFacility(table: string, facilityId: string) {
     try {
-      const { count } = await supabase
-        .from(table)
-        .select('*', { count: 'exact', head: true })
-        .eq('facility_id', facilityId);
-
+      const { count } = await supabase.from(table).select('*', { count: 'exact', head: true }).eq('facility_id', facilityId);
       return count || 0;
     } catch {
       return 0;
@@ -41,24 +34,13 @@ export default function ManagementPage() {
   }
 
   async function load() {
-    const { data: facilityRows } = await supabase.from('facilities').select('*').order('name');
-    const list = facilityRows || [];
+    const { data } = await supabase.from('facilities').select('*').order('name');
+    const list = data || [];
     setFacilities(list);
 
-    const next: Record<string, FacilityStats> = {};
-
+    const next: Record<string, any> = {};
     for (const f of list) {
-      const [
-        patients,
-        meds,
-        treatments,
-        incidents,
-        transfers,
-        tasks,
-        docs,
-        depot,
-        belongings,
-      ] = await Promise.all([
+      const [patients, meds, treatments, incidents, transfers, tasks, docs, depot, belongings] = await Promise.all([
         countByFacility('patients', f.id),
         countByFacility('medications', f.id),
         countByFacility('treatment_records', f.id),
@@ -69,52 +51,25 @@ export default function ManagementPage() {
         countByFacility('depot_items', f.id),
         countByFacility('belonging_records', f.id),
       ]);
-
-      next[f.id] = {
-        patients,
-        meds,
-        treatments,
-        incidents,
-        transfers,
-        tasks,
-        docs,
-        depot,
-        belongings,
-      };
+      next[f.id] = { patients, meds, treatments, incidents, transfers, tasks, docs, depot, belongings };
     }
-
     setStats(next);
   }
 
-  const visibleFacilities = selectedFacility === 'all'
-    ? facilities
-    : facilities.filter((f) => f.id === selectedFacility);
-
-  const totals = visibleFacilities.reduce((acc, f) => {
-    const s = stats[f.id] || {
-      patients: 0,
-      meds: 0,
-      treatments: 0,
-      incidents: 0,
-      transfers: 0,
-      tasks: 0,
-      docs: 0,
-      depot: 0,
-      belongings: 0,
-    };
-
-    Object.keys(s).forEach((key) => {
-      acc[key] = Number(acc[key] || 0) + Number((s as any)[key] || 0);
+  const visibleFacilities = selectedFacility === 'all' ? facilities : facilities.filter((f) => f.id === selectedFacility);
+  const totals = visibleFacilities.reduce((acc: Record<string, number>, f) => {
+    const s = stats[f.id] || {};
+    ['patients','meds','treatments','incidents','transfers','tasks','docs','depot','belongings'].forEach((k) => {
+      acc[k] = Number(acc[k] || 0) + Number(s[k] || 0);
     });
-
     return acc;
-  }, {} as Record<string, number>);
+  }, {});
 
   return (
-    <Shell>
+    <>
       <div className="hero">
         <h2>Yönetim Paneli</h2>
-        <p>Kurucu ve müdür için tüm kurumlara erişim, kurum bazlı operasyon özeti ve hızlı kontrol ekranı.</p>
+        <p>Sadece kurucu ve yönetici yetkisi olanlar tüm kurumları görebilir.</p>
       </div>
 
       <div className="panel">
@@ -126,7 +81,7 @@ export default function ManagementPage() {
               {facilities.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
           </div>
-          <div className="notice">Bu ekran kurucu/müdür için tüm kurumları tek merkezden görmeye yarar.</div>
+          <div className="notice">Hemşire kullanıcıları bu paneli açamaz; sadece kendi kurumundaki işlem sayfalarını kullanır.</div>
         </div>
       </div>
 
@@ -144,31 +99,10 @@ export default function ManagementPage() {
       </div>
 
       <div className="panel">
-        <div className="panelHead">
-          <div>
-            <h2>Kurum Bazlı Yönetim Özeti</h2>
-            <p>Her kurumun ana sayıları ve kritik operasyon durumu.</p>
-          </div>
-        </div>
-
+        <div className="panelHead"><div><h2>Kurum Bazlı Yönetim Özeti</h2><p>Tüm kurumlar tek ekranda.</p></div></div>
         <div className="tableWrap">
           <table>
-            <thead>
-              <tr>
-                <th>Kurum</th>
-                <th>Durum</th>
-                <th>Kapasite</th>
-                <th>Hasta</th>
-                <th>İlaç</th>
-                <th>Tedavi</th>
-                <th>Olay</th>
-                <th>Sevk</th>
-                <th>Görev</th>
-                <th>Evrak</th>
-                <th>Depo</th>
-                <th>Emanet</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Kurum</th><th>Durum</th><th>Kapasite</th><th>Hasta</th><th>İlaç</th><th>Tedavi</th><th>Olay</th><th>Sevk</th><th>Görev</th><th>Evrak</th><th>Depo</th><th>Emanet</th></tr></thead>
             <tbody>
               {visibleFacilities.map((facility) => {
                 const s = stats[facility.id] || {};
@@ -194,6 +128,6 @@ export default function ManagementPage() {
           </table>
         </div>
       </div>
-    </Shell>
+    </>
   );
 }
