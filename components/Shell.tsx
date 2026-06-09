@@ -1,15 +1,15 @@
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
-import MobileBar from './MobileBar';
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="appShell">
       <Sidebar />
-      <main className="main">
+      <main className="mainContent">
         <Topbar />
-        {children}
-        <MobileBar />
+        <div className="pageContent">
+          {children}
+        </div>
       </main>
     </div>
   );
