@@ -2,7 +2,8 @@ import Link from 'next/link';
 
 const groups = [
   { title: 'Günlük İşler', items: [['Ana Panel', '/dashboard', '🏠'], ['Hasta Listesi', '/patients', '👥'], ['İlaçlar', '/medications', '💊'], ['İş Akışı', '/workflow', '🔄']] },
-  { title: 'Klinik ve Acil', items: [['Acil Durum', '/emergency', '🚑'], ['Evrak Merkezi', '/documents', '📁']] },
+  { title: 'Klinik Operasyon', items: [['Vital Takip', '/vitals', '🩺'], ['Olay / Düşme', '/incidents', '⚠️'], ['Hastane Sevk', '/transfers', '🚑']] },
+  { title: 'Klinik ve Acil', items: [['Acil Durum', '/emergency', '🚨'], ['Evrak Merkezi', '/documents', '📁']] },
   { title: 'Depo ve Yönetim', items: [['Revir Deposu', '/depot', '🏬'], ['Kullanıcılar', '/users', '🔐']] },
 ];
 
@@ -11,7 +12,7 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="logo">
         <div className="logoIcon">🏥</div>
-        <div><h1>İlgi Klinik Bulut</h1><span>v28 profesyonel çekirdek</span></div>
+        <div><h1>İlgi Klinik Bulut</h1><span>v29.1 klinik operasyon</span></div>
       </div>
       {groups.map((group) => (
         <div key={group.title}>

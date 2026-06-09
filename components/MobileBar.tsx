@@ -5,9 +5,9 @@ export default function MobileBar() {
     <div className="mobileBar">
       <Link href="/dashboard">🏠 Ana</Link>
       <Link href="/patients">👥 Hasta</Link>
-      <Link href="/medications">💊 İlaç</Link>
-      <Link href="/emergency">🚑 Acil</Link>
-      <Link href="/workflow">🔄 Akış</Link>
+      <Link href="/vitals">🩺 Vital</Link>
+      <Link href="/incidents">⚠️ Olay</Link>
+      <Link href="/transfers">🚑 Sevk</Link>
     </div>
   );
 }
