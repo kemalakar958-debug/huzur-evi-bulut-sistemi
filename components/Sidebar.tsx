@@ -1,10 +1,11 @@
 import Link from 'next/link';
 
 const groups = [
-  { title: 'Günlük İşler', items: [['Ana Panel', '/dashboard', '🏠'], ['Hasta Listesi', '/patients', '👥'], ['İlaçlar', '/medications', '💊'], ['İş Akışı', '/workflow', '🔄']] },
-  { title: 'Klinik Operasyon', items: [['Vital Takip', '/vitals', '🩺'], ['Olay / Düşme', '/incidents', '⚠️'], ['Hastane Sevk', '/transfers', '🚑']] },
+  { title: 'Günlük İşler', items: [['Ana Panel', '/dashboard', '🏠'], ['Hasta Listesi', '/patients', '👥'], ['İlaçlar', '/medications', '💊'], ['MAR İlaç Uygulama', '/mar', '✅']] },
+  { title: 'Klinik Operasyon', items: [['Vital Takip', '/vitals', '🩺'], ['Olay / Düşme', '/incidents', '⚠️'], ['Hastane Sevk', '/transfers', '🚑'], ['Görev Takip', '/tasks', '📌'], ['Nöbet Teslim', '/shift-handover', '📘']] },
+  { title: 'Bakım Modülleri', items: [['Bakım Planı', '/care-plans', '🧾'], ['Günlük Bakım', '/daily-care', '🛏️'], ['Beslenme / Sıvı', '/nutrition', '🍽️'], ['Bası / Pansuman', '/wound-care', '🩹'], ['Randevular', '/appointments', '📅']] },
   { title: 'Klinik ve Acil', items: [['Acil Durum', '/emergency', '🚨'], ['Evrak Merkezi', '/documents', '📁']] },
-  { title: 'Depo ve Yönetim', items: [['Revir Deposu', '/depot', '🏬'], ['Kullanıcılar', '/users', '🔐']] },
+  { title: 'Depo ve Yönetim', items: [['Revir Deposu', '/depot', '🏬'], ['İş Akışı', '/workflow', '🔄'], ['Kullanıcılar', '/users', '🔐']] },
 ];
 
 export default function Sidebar() {
@@ -12,7 +13,7 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="logo">
         <div className="logoIcon">🏥</div>
-        <div><h1>İlgi Klinik Bulut</h1><span>v29.1 klinik operasyon</span></div>
+        <div><h1>İlgi Klinik Bulut</h1><span>v30 klinik mega paket</span></div>
       </div>
       {groups.map((group) => (
         <div key={group.title}>
