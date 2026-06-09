@@ -50,6 +50,7 @@ const founderManagement: MenuItem[] = [
   ['Kurucu Dashboard', '/founder-dashboard', '👑'],
   ['Yönetim Paneli', '/management', '📊'],
   ['Kurumlar / Ayarlar', '/facilities', '🏢'],
+  ['Kullanıcı Oluştur / Yetki', '/user-admin', '🧑‍💼'],
   ['Rol / Kurum Ayarları', '/role-settings', '🧩'],
   ['Sistem Ayarları', '/system-settings', '⚙️'],
   ['Kullanıcılar', '/users', '🔐'],
@@ -63,7 +64,9 @@ function MenuGroup({ title, items }: { title: string; items: MenuItem[] }) {
     <div>
       <div className="navTitle">{title}</div>
       {items.map(([label, href, icon]) => (
-        <Link className="navBtn" href={href} key={href}><span>{icon}</span><span>{label}</span></Link>
+        <Link className="navBtn" href={href} key={href}>
+          <span>{icon}</span><span>{label}</span>
+        </Link>
       ))}
     </div>
   );
@@ -78,7 +81,13 @@ export default function Sidebar() {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
-    const { data } = await supabase.from('profiles').select('role, facility_id, full_name').eq('id', userId).maybeSingle();
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('role, facility_id, full_name')
+      .eq('id', userId)
+      .maybeSingle();
+
     setProfile(data || null);
   }
 
@@ -92,8 +101,9 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="logo">
         <div className="logoIcon">🏥</div>
-        <div><h1>İlgi Klinik Bulut</h1><span>{role} panel • v47</span></div>
+        <div><h1>İlgi Klinik Bulut</h1><span>{role} panel • v48</span></div>
       </div>
+
       {isFounder && <MenuGroup title="🏢 Yönetim Merkezi" items={founderManagement} />}
       {isManager && <MenuGroup title="🏢 Müdür Merkezi" items={managerManagement} />}
       {(isFounder || isManager || isNurse || isViewer) && <MenuGroup title="👥 Hasta Yönetimi" items={patientManagement} />}
