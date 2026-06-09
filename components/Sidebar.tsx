@@ -21,6 +21,7 @@ const clinicalCare: MenuItem[] = [
   ['Beslenme / Sıvı', '/nutrition', '🍽️'],
   ['Bası / Pansuman', '/wound-care', '🩹'],
   ['Olay / Düşme', '/incidents', '⚠️'],
+  ['Hastane Süreç Merkezi', '/hospital-cases', '🏥'],
   ['Hastane Sevk', '/transfers', '🚑'],
   ['Randevular', '/appointments', '📅'],
 ];
@@ -91,7 +92,7 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="logo">
         <div className="logoIcon">🏥</div>
-        <div><h1>İlgi Klinik Bulut</h1><span>{role} panel • v44.1</span></div>
+        <div><h1>İlgi Klinik Bulut</h1><span>{role} panel • v47</span></div>
       </div>
       {isFounder && <MenuGroup title="🏢 Yönetim Merkezi" items={founderManagement} />}
       {isManager && <MenuGroup title="🏢 Müdür Merkezi" items={managerManagement} />}
