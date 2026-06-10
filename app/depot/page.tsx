@@ -1,6 +1,71 @@
 'use client';
-import {useEffect,useState} from 'react';
+
+import { useEffect, useState } from 'react';
 import Shell from '@/components/Shell';
-import {supabase} from '@/lib/supabaseClient';
-import type {DepotItem,Facility} from '@/lib/types';
-export default function DepotPage(){const[facilities,setFacilities]=useState<Facility[]>([]);const[items,setItems]=useState<DepotItem[]>([]);const[form,setForm]=useState({facility_id:'',name:'',barcode:'',category:'İlaç',shelf:'',lot_no:'',exp_date:'',current_stock:0,min_stock:5,max_stock:20});useEffect(()=>{load();const c=supabase.channel('depot-realtime').on('postgres_changes',{event:'*',schema:'public',table:'depot_items'},()=>loadItems()).subscribe();return()=>{supabase.removeChannel(c)}},[]);async function load(){const{data:f}=await supabase.from('facilities').select('*').order('name');setFacilities(f||[]);if(f?.[0])setForm(o=>({...o,facility_id:o.facility_id||f[0].id}));await loadItems()}async function loadItems(){const{data}=await supabase.from('depot_items').select('*').order('name');setItems(data||[])}async function saveItem(){if(!form.facility_id||!form.name)return alert('Kurum ve ürün adı zorunlu.');const{error}=await supabase.from('depot_items').insert(form);if(error)return alert(error.message);setForm(o=>({...o,name:'',barcode:'',shelf:'',lot_no:'',exp_date:'',current_stock:0,min_stock:5,max_stock:20}));await loadItems()}async function createAutoRequests(){const critical=items.filter(i=>Number(i.current_stock||0)<=Number(i.min_stock||0));for(const item of critical){await supabase.from('stock_requests').insert({facility_id:item.facility_id,product_name:item.name,category:item.category,current_stock:item.current_stock,requested_qty:Math.max(1,Number(item.max_stock||item.min_stock*2)-Number(item.current_stock||0)),min_stock:item.min_stock,priority:item.current_stock<=0?'Kritik':'Acil',status:'Bekliyor',approval_status:'Bekliyor',source:'auto_depot'})}alert(`${critical.length} otomatik stok isteği oluşturuldu.`)}return <Shell><div className="hero"><h2>Revir Deposu</h2><p>Barkod, raf, lot, SKT, minimum/maksimum stok ve otomatik stok isteği.</p></div><div className="panel"><div className="panelHead"><div><h2>Depo Ürünü Ekle</h2><p>Her kurumun deposu ayrı tutulur.</p></div></div><div className="grid grid4"><div><label>Kurum</label><select value={form.facility_id} onChange={e=>setForm({...form,facility_id:e.target.value})}>{facilities.map(f=><option value={f.id} key={f.id}>{f.name}</option>)}</select></div><div><label>Ürün</label><input value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></div><div><label>Barkod</label><input value={form.barcode} onChange={e=>setForm({...form,barcode:e.target.value})}/></div><div><label>Kategori</label><input value={form.category} onChange={e=>setForm({...form,category:e.target.value})}/></div></div><div className="grid grid4"><div><label>Raf</label><input value={form.shelf} onChange={e=>setForm({...form,shelf:e.target.value})}/></div><div><label>Lot No</label><input value={form.lot_no} onChange={e=>setForm({...form,lot_no:e.target.value})}/></div><div><label>SKT</label><input type="date" value={form.exp_date} onChange={e=>setForm({...form,exp_date:e.target.value})}/></div><div><label>Mevcut Stok</label><input type="number" value={form.current_stock} onChange={e=>setForm({...form,current_stock:Number(e.target.value)})}/></div></div><div className="grid grid2"><div><label>Minimum</label><input type="number" value={form.min_stock} onChange={e=>setForm({...form,min_stock:Number(e.target.value)})}/></div><div><label>Maksimum</label><input type="number" value={form.max_stock} onChange={e=>setForm({...form,max_stock:Number(e.target.value)})}/></div></div><div className="actions"><button className="primary" onClick={saveItem}>Depoya Ekle</button><button className="amber" onClick={createAutoRequests}>Otomatik Stok İstek Oluştur</button></div></div><div className="panel"><div className="panelHead"><div><h2>Depo Listesi</h2><p>{items.length} ürün</p></div></div><div className="tableWrap"><table><thead><tr><th>Ürün</th><th>Kategori</th><th>Raf</th><th>Lot</th><th>SKT</th><th>Stok</th><th>Min/Max</th><th>Durum</th></tr></thead><tbody>{items.map(i=>{const low=Number(i.current_stock||0)<=Number(i.min_stock||0);return <tr key={i.id}><td><b>{i.name}</b><br/>{i.barcode||'-'}</td><td>{i.category}</td><td>{i.shelf||'-'}</td><td>{i.lot_no||'-'}</td><td>{i.exp_date||'-'}</td><td>{i.current_stock}</td><td>{i.min_stock} / {i.max_stock}</td><td><span className={`pill ${low?'danger':'ok'}`}>{low?'Kritik':'Normal'}</span></td></tr>})}</tbody></table></div></div></Shell>}
+import { supabase } from '@/lib/supabaseClient';
+import { applyActiveFacilityFilter, getInsertFacilityId, useActiveFacility } from '@/lib/activeFacility';
+
+type Row = Record<string, any>;
+
+export default function DepotPage() {
+  const ctx = useActiveFacility();
+  const [facilities, setFacilities] = useState<Row[]>([]);
+  const [rows, setRows] = useState<Row[]>([]);
+  const [form, setForm] = useState({ facility_id: '', name: '', category: 'İlaç', current_stock: '0', min_stock: '0', max_stock: '0' });
+
+  useEffect(() => { load(); }, [ctx.activeFacilityId, ctx.role, ctx.userFacilityId]);
+
+  async function load() {
+    const { data: f } = await supabase.from('facilities').select('*').order('name');
+    setFacilities(f || []);
+    setForm((old) => ({ ...old, facility_id: old.facility_id || getInsertFacilityId(ctx, f?.[0]?.id) }));
+
+    let q = supabase.from('depot_items').select('*').order('name').limit(500);
+    q = applyActiveFacilityFilter(q, ctx);
+    const { data } = await q;
+    setRows(data || []);
+  }
+
+  async function save() {
+    const facilityId = getInsertFacilityId(ctx, form.facility_id);
+    if (!facilityId) return alert('Kurum seç.');
+    if (!form.name) return alert('Ürün adı yaz.');
+    const { error } = await supabase.from('depot_items').insert({
+      facility_id: facilityId,
+      name: form.name,
+      category: form.category,
+      current_stock: Number(form.current_stock || 0),
+      min_stock: Number(form.min_stock || 0),
+      max_stock: Number(form.max_stock || 0),
+    });
+    if (error) return alert(error.message);
+    setForm((old) => ({ ...old, name: '', current_stock: '0', min_stock: '0', max_stock: '0' }));
+    await load();
+  }
+
+  async function updateStock(row: Row, value: string) {
+    const { error } = await supabase.from('depot_items').update({ current_stock: Number(value || 0) }).eq('id', row.id);
+    if (error) return alert(error.message);
+    await load();
+  }
+
+  const critical = rows.filter((r) => Number(r.current_stock || 0) <= Number(r.min_stock || 0));
+
+  return (
+    <Shell>
+      <div className="hero"><h2>Revir Deposu</h2><p>Aktif kurum filtresine bağlı depo.</p></div>
+      <div className="kpiGrid"><div className="kpi"><span>Ürün</span><strong>{rows.length}</strong></div><div className="kpi"><span>Kritik</span><strong>{critical.length}</strong></div></div>
+      <div className="panel">
+        <div className="grid grid5">
+          <div><label>Kurum</label><select value={form.facility_id} onChange={(e) => setForm({ ...form, facility_id: e.target.value })} disabled={ctx.role !== 'founder' || ctx.activeFacilityId !== 'general'}>{facilities.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select></div>
+          <div><label>Ürün</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+          <div><label>Kategori</label><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}><option>İlaç</option><option>Serum</option><option>Sarf Malzeme</option><option>Medikal Cihaz</option><option>Temizlik</option><option>Diğer</option></select></div>
+          <div><label>Stok</label><input type="number" value={form.current_stock} onChange={(e) => setForm({ ...form, current_stock: e.target.value })} /></div>
+          <div><label>Min</label><input type="number" value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: e.target.value })} /></div>
+        </div>
+        <div className="actions"><button className="primary" onClick={save}>Ürün Kaydet</button></div>
+      </div>
+      <div className="panel"><div className="tableWrap"><table><thead><tr><th>Ürün</th><th>Kategori</th><th>Stok</th><th>Min</th><th>Durum</th></tr></thead><tbody>{rows.map((r) => <tr key={r.id}><td><b>{r.name}</b></td><td>{r.category || '-'}</td><td><input type="number" defaultValue={r.current_stock || 0} onBlur={(e) => updateStock(r, e.target.value)} /></td><td>{r.min_stock || 0}</td><td><span className={`pill ${Number(r.current_stock || 0) <= Number(r.min_stock || 0) ? 'danger' : 'ok'}`}>{Number(r.current_stock || 0) <= Number(r.min_stock || 0) ? 'Kritik' : 'Normal'}</span></td></tr>)}{rows.length === 0 && <tr><td colSpan={5}>Kayıt yok.</td></tr>}</tbody></table></div></div>
+    </Shell>
+  );
+}

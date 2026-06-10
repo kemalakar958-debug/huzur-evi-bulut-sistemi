@@ -48,7 +48,6 @@ export function useActiveFacility() {
   async function load() {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
-
     if (!userId) return;
 
     const { data: profile } = await supabase
@@ -59,7 +58,6 @@ export function useActiveFacility() {
 
     const role = profile?.role || 'viewer';
     const userFacilityId = profile?.facility_id || null;
-
     let activeFacilityId = getStoredActiveFacilityId();
 
     if (role !== 'founder') {
@@ -84,14 +82,15 @@ export function applyActiveFacilityFilter(query: any, ctx: ActiveFacilityContext
     return query.eq('facility_id', ctx.activeFacilityId);
   }
 
-  if (ctx.userFacilityId) {
-    return query.eq('facility_id', ctx.userFacilityId);
-  }
-
+  if (ctx.userFacilityId) return query.eq('facility_id', ctx.userFacilityId);
   return query;
 }
 
-export function activeFacilityLabel(ctx: ActiveFacilityContext) {
-  if (ctx.role === 'founder' && ctx.activeFacilityId === 'general') return 'Genel Kontrol';
-  return ctx.activeFacilityId;
+export function getInsertFacilityId(ctx: ActiveFacilityContext, fallbackFacilityId?: string) {
+  if (ctx.role === 'founder') {
+    if (ctx.activeFacilityId !== 'general') return ctx.activeFacilityId;
+    return fallbackFacilityId || '';
+  }
+
+  return ctx.userFacilityId || fallbackFacilityId || '';
 }
