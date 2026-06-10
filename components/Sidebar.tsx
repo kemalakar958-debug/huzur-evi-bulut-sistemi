@@ -12,13 +12,17 @@ type Profile = {
 
 type MenuItem = [string, string, string];
 
-const patientManagement: MenuItem[] = [
+const homeMenu: MenuItem[] = [
+  ['Ana Sayfa', '/dashboard', '🏠'],
+];
+
+const patientMenu: MenuItem[] = [
   ['Hasta Listesi', '/patients', '👥'],
   ['Hasta Kabul / Ayrılış', '/admissions', '📥'],
   ['Ziyaretçi Takibi', '/visitors', '👪'],
 ];
 
-const clinicalCare: MenuItem[] = [
+const clinicalMenu: MenuItem[] = [
   ['Vital Takip', '/vitals', '🩺'],
   ['Tedavi Sistemi', '/treatments', '🧪'],
   ['İlaçlar', '/medications', '💊'],
@@ -30,7 +34,7 @@ const clinicalCare: MenuItem[] = [
   ['Randevular', '/appointments', '📅'],
 ];
 
-const operations: MenuItem[] = [
+const operationsMenu: MenuItem[] = [
   ['Revir Deposu', '/depot', '🏬'],
   ['Kurumlar Arası İstek', '/interfacility-requests', '🔁'],
   ['Evrak Merkezi', '/documents', '📁'],
@@ -39,7 +43,7 @@ const operations: MenuItem[] = [
   ['Nöbet Teslim', '/shift-handover', '📘'],
 ];
 
-const founderManagement: MenuItem[] = [
+const founderMenu: MenuItem[] = [
   ['Kurucu Dashboard', '/founder-dashboard', '👑'],
   ['Kurumlar / Ayarlar', '/facilities', '🏢'],
   ['Kullanıcı Oluştur / Yetki', '/user-admin', '🧑‍💼'],
@@ -47,7 +51,7 @@ const founderManagement: MenuItem[] = [
   ['Sistem Ayarları', '/system-settings', '⚙️'],
 ];
 
-const managerManagement: MenuItem[] = [
+const managerMenu: MenuItem[] = [
   ['Kurum Panelim', '/my-panel', '🏢'],
 ];
 
@@ -77,7 +81,6 @@ export default function Sidebar() {
   async function loadProfile() {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
-
     if (!userId) return;
 
     const { data } = await supabase
@@ -90,7 +93,6 @@ export default function Sidebar() {
   }
 
   const role = profile?.role || 'viewer';
-
   const isFounder = role === 'founder';
   const isManager = role === 'manager';
   const isNurse = role === 'nurse';
@@ -102,23 +104,27 @@ export default function Sidebar() {
         <div className="logoIcon">🏥</div>
         <div>
           <h1>İlgi Klinik Bulut</h1>
-          <span>{role} panel • v49 temiz menü</span>
+          <span>{role} panel</span>
         </div>
       </div>
 
-      {isFounder && <MenuGroup title="🏢 Yönetim Merkezi" items={founderManagement} />}
-      {isManager && <MenuGroup title="🏢 Müdür Merkezi" items={managerManagement} />}
+      {(isFounder || isManager || isNurse || isViewer) && (
+        <MenuGroup title="🏠 Ana Sayfa" items={homeMenu} />
+      )}
+
+      {isFounder && <MenuGroup title="🏢 Yönetim Merkezi" items={founderMenu} />}
+      {isManager && <MenuGroup title="🏢 Müdür Merkezi" items={managerMenu} />}
 
       {(isFounder || isManager || isNurse || isViewer) && (
-        <MenuGroup title="👥 Hasta Yönetimi" items={patientManagement} />
+        <MenuGroup title="👥 Hasta Yönetimi" items={patientMenu} />
       )}
 
       {(isFounder || isManager || isNurse || isViewer) && (
-        <MenuGroup title="🩺 Klinik ve Bakım" items={clinicalCare} />
+        <MenuGroup title="🩺 Klinik ve Bakım" items={clinicalMenu} />
       )}
 
       {(isFounder || isManager || isNurse) && (
-        <MenuGroup title="📦 Operasyon Merkezi" items={operations} />
+        <MenuGroup title="📦 Operasyon Merkezi" items={operationsMenu} />
       )}
     </aside>
   );

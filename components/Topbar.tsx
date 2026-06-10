@@ -18,15 +18,16 @@ type Facility = {
 export default function Topbar() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [activeFacilityId, setActiveFacilityId] = useState<string>('general');
-  const [email, setEmail] = useState<string>('');
+  const [activeFacilityId, setActiveFacilityId] = useState('general');
+  const [email, setEmail] = useState('');
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function load() {
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
-
     if (!user) return;
 
     setEmail(user.email || '');
@@ -61,10 +62,10 @@ export default function Topbar() {
 
     if (profile.role === 'founder') {
       if (activeFacilityId === 'general') return 'Genel Kontrol';
-      return facilities.find((f) => f.id === activeFacilityId)?.name || 'Genel Kontrol';
+      return facilities.find((facility) => facility.id === activeFacilityId)?.name || 'Genel Kontrol';
     }
 
-    return facilities.find((f) => f.id === profile.facility_id)?.name || 'Kurum Atanmamış';
+    return facilities.find((facility) => facility.id === profile.facility_id)?.name || 'Kurum Atanmamış';
   }
 
   function roleLabel() {
@@ -86,14 +87,10 @@ export default function Topbar() {
   }
 
   return (
-    <header className="topbar">
-      <div className="topbarSearch">
-        🔎 Aktif filtre: <b style={{ marginLeft: 6 }}>{activeFacilityName()}</b>
-      </div>
-
-      <div className="topbarContext">
-        <div className="contextCard">
-          <span className="contextLabel">Aktif Kurum</span>
+    <header className="topbar cleanTopbar">
+      <div className="topbarLeft">
+        <div className="activeFacilityBox">
+          <span>AKTİF KURUM</span>
           <strong>{activeFacilityName()}</strong>
         </div>
 
@@ -101,21 +98,32 @@ export default function Topbar() {
           <select
             className="facilitySwitcher"
             value={activeFacilityId}
-            onChange={(e) => changeFounderFacility(e.target.value)}
+            onChange={(event) => changeFounderFacility(event.target.value)}
           >
             <option value="general">Genel Kontrol</option>
             {facilities.map((facility) => (
-              <option key={facility.id} value={facility.id}>{facility.name}</option>
+              <option key={facility.id} value={facility.id}>
+                {facility.name}
+              </option>
             ))}
           </select>
         )}
+      </div>
 
-        <div className="userBadge">
-          <span>{roleLabel()}</span>
-          <b>{profile?.full_name || email}</b>
+      <div className="topbarRight">
+        <div className="userProfileBox">
+          <div className="userAvatar">
+            {(profile?.full_name || email || '?').slice(0, 1).toUpperCase()}
+          </div>
+          <div>
+            <strong>{profile?.full_name || email || 'Kullanıcı'}</strong>
+            <span>{roleLabel()} • Çevrimiçi</span>
+          </div>
         </div>
 
-        <button className="logoutBtn" onClick={logout}>Çıkış</button>
+        <button className="logoutBtn" onClick={logout}>
+          Çıkış
+        </button>
       </div>
     </header>
   );
