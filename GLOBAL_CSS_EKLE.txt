@@ -158,3 +158,4 @@ Import kullanma.
     width:100%;
   }
 }
+@import '../components/v49_1_dashboard_styles.css';
