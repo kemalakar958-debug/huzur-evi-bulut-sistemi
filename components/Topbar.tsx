@@ -4,16 +4,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { setStoredActiveFacilityId } from '@/lib/activeFacility';
 
-type Profile = {
-  role: string | null;
-  facility_id: string | null;
-  full_name?: string | null;
-};
-
-type Facility = {
-  id: string;
-  name: string;
-};
+type Profile = { role: string | null; facility_id: string | null; full_name?: string | null };
+type Facility = { id: string; name: string };
 
 export default function Topbar() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -21,9 +13,7 @@ export default function Topbar() {
   const [activeFacilityId, setActiveFacilityId] = useState('general');
   const [email, setEmail] = useState('');
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   async function load() {
     const { data: userData } = await supabase.auth.getUser();
@@ -57,23 +47,21 @@ export default function Topbar() {
     }
   }
 
-  function activeFacilityName() {
-    if (!profile) return 'Yükleniyor...';
-
-    if (profile.role === 'founder') {
-      if (activeFacilityId === 'general') return 'Genel Kontrol';
-      return facilities.find((facility) => facility.id === activeFacilityId)?.name || 'Genel Kontrol';
-    }
-
-    return facilities.find((facility) => facility.id === profile.facility_id)?.name || 'Kurum Atanmamış';
-  }
-
   function roleLabel() {
     if (profile?.role === 'founder') return 'Kurucu';
     if (profile?.role === 'manager') return 'Müdür';
     if (profile?.role === 'nurse') return 'Hemşire';
     if (profile?.role === 'viewer') return 'Görüntüleyici';
     return 'Rol Yok';
+  }
+
+  function activeFacilityName() {
+    if (!profile) return 'Yükleniyor...';
+    if (profile.role === 'founder') {
+      if (activeFacilityId === 'general') return 'Genel Kontrol';
+      return facilities.find((facility) => facility.id === activeFacilityId)?.name || 'Genel Kontrol';
+    }
+    return facilities.find((facility) => facility.id === profile.facility_id)?.name || 'Kurum Atanmamış';
   }
 
   function changeFounderFacility(value: string) {
@@ -87,44 +75,25 @@ export default function Topbar() {
   }
 
   return (
-    <header className="topbar cleanTopbar">
-      <div className="topbarLeft">
-        <div className="activeFacilityBox">
-          <span>AKTİF KURUM</span>
-          <strong>{activeFacilityName()}</strong>
-        </div>
-
-        {profile?.role === 'founder' && (
-          <select
-            className="facilitySwitcher"
-            value={activeFacilityId}
-            onChange={(event) => changeFounderFacility(event.target.value)}
-          >
-            <option value="general">Genel Kontrol</option>
-            {facilities.map((facility) => (
-              <option key={facility.id} value={facility.id}>
-                {facility.name}
-              </option>
-            ))}
-          </select>
-        )}
+    <header className="simpleTopbar">
+      <div className="simpleTopbarBlock">
+        <span>AKTİF KURUM</span>
+        <strong>{activeFacilityName()}</strong>
       </div>
 
-      <div className="topbarRight">
-        <div className="userProfileBox">
-          <div className="userAvatar">
-            {(profile?.full_name || email || '?').slice(0, 1).toUpperCase()}
-          </div>
-          <div>
-            <strong>{profile?.full_name || email || 'Kullanıcı'}</strong>
-            <span>{roleLabel()} • Çevrimiçi</span>
-          </div>
-        </div>
+      {profile?.role === 'founder' && (
+        <select className="simpleFacilitySelect" value={activeFacilityId} onChange={(e) => changeFounderFacility(e.target.value)}>
+          <option value="general">Genel Kontrol</option>
+          {facilities.map((facility) => <option key={facility.id} value={facility.id}>{facility.name}</option>)}
+        </select>
+      )}
 
-        <button className="logoutBtn" onClick={logout}>
-          Çıkış
-        </button>
+      <div className="simpleUserBlock">
+        <strong>{profile?.full_name || email || 'Kullanıcı'}</strong>
+        <span>{roleLabel()} • {email}</span>
       </div>
+
+      <button className="simpleLogout" onClick={logout}>Çıkış</button>
     </header>
   );
 }
