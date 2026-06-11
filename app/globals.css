@@ -52,6 +52,6 @@
 
 .statusBox.ok { background:#f0fdf4; border-color:#bbf7d0; }
 .statusBox.warn { background:#fffbeb; border-color:#fde68a; }
-@import '../components/v49_1_dashboard_styles.css';
+
 .statusBox.info { background:#eff6ff; border-color:#bfdbfe; }
 .statusBox.danger { background:#fef2f2; border-color:#fecaca; }
