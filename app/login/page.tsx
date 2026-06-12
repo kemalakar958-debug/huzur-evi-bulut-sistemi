@@ -38,7 +38,7 @@ export default function LoginPage() {
 
         <section className="loginBrand">
           <div className="brandBadge">🏥</div>
-          <h1>İlgi Klinik Bulut</h1>
+          <h1>Huzur Sistemi</h1>
           <p>Huzurevi ve yaşlı bakım merkezi yönetim sistemi</p>
 
           <div className="brandList">
@@ -53,8 +53,8 @@ export default function LoginPage() {
           <div className="loginCardHeader">
             <div className="loginIcon">🏥</div>
             <div>
-              <h2>Giriş Yap</h2>
-              <p>Yetkili personel paneli</p>
+              <h2>Huzur Sistemi</h2>
+              <p>Yetkili personel girişi</p>
             </div>
           </div>
 
