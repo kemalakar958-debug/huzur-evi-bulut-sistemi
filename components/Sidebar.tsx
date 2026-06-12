@@ -80,13 +80,20 @@ function MenuGroup({ group }: { group: MenuGroupData }) {
 
 export default function Sidebar() {
   const [profile, setProfile] = useState<Profile | null>(null);
+
   useEffect(() => { loadProfile(); }, []);
 
   async function loadProfile() {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
-    const { data } = await supabase.from('profiles').select('role, facility_id, full_name').eq('id', userId).maybeSingle();
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('role, facility_id, full_name')
+      .eq('id', userId)
+      .maybeSingle();
+
     setProfile(data || null);
   }
 
@@ -109,10 +116,20 @@ export default function Sidebar() {
   return (
     <>
       <aside className="sidebar">
-        <div className="logo"><div className="logoIcon">🏥</div><div><h1>İlgi Klinik Bulut</h1><span>{role || 'yetkisiz'} panel</span></div></div>
+        <Link href="/dashboard" className="logo logoHomeLink">
+          <div className="logoIcon">🏥</div>
+          <div>
+            <h1>Huzur Sistemi</h1>
+            <span>{role || 'yetkisiz'} panel</span>
+          </div>
+        </Link>
+
         {groups.map((group) => <MenuGroup group={group} key={group.key} />)}
       </aside>
+
       <style jsx global>{`
+        .logoHomeLink{text-decoration:none!important;color:inherit!important;cursor:pointer!important}
+        .logoHomeLink:hover{opacity:.92!important}
         .navTitleButton{width:100%!important;border:none!important;background:transparent!important;display:flex!important;align-items:center!important;justify-content:space-between!important;cursor:pointer!important;padding-right:8px!important}
         .navTitleButton b{font-size:18px!important;line-height:1!important;opacity:.75!important}
         .navGroupItems{display:flex!important;flex-direction:column!important;gap:6px!important}
