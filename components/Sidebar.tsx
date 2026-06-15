@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
 type Profile = { role: string | null; facility_id: string | null; full_name?: string | null };
+type Facility = { id: string; name: string };
 type MenuItem = [string, string, string];
 type MenuGroupData = { key: string; title: string; items: MenuItem[] };
 
@@ -22,6 +23,7 @@ const managerMenu: MenuItem[] = [
 ];
 const patientMenu: MenuItem[] = [
   ['Hasta Listesi', '/patients', '👥'],
+  ['Yeni Hasta Ekle', '/patients/new', '➕'],
   ['Hasta Kabul / Ayrılış', '/admissions', '📥'],
   ['Ziyaretçi Takibi', '/visitors', '👪'],
 ];
@@ -49,6 +51,13 @@ const managerOperationsMenu: MenuItem[] = [
   ['Görev Takibi', '/tasks', '📌'],
   ['Nöbet Teslim', '/shift-handover', '📘'],
 ];
+
+function roleLabel(role: string | null | undefined) {
+  if (role === 'founder') return 'Kurucu';
+  if (role === 'manager') return 'Müdür';
+  if (role === 'nurse') return 'Hemşire';
+  return 'Yetkisiz';
+}
 
 function MenuGroup({ group }: { group: MenuGroupData }) {
   const [open, setOpen] = useState(true);
@@ -80,21 +89,34 @@ function MenuGroup({ group }: { group: MenuGroupData }) {
 
 export default function Sidebar() {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [facility, setFacility] = useState<Facility | null>(null);
+  const [email, setEmail] = useState('');
 
   useEffect(() => { loadProfile(); }, []);
 
   async function loadProfile() {
     const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-    if (!userId) return;
+    const user = userData.user;
+    if (!user) return;
+
+    setEmail(user.email || '');
 
     const { data } = await supabase
       .from('profiles')
       .select('role, facility_id, full_name')
-      .eq('id', userId)
+      .eq('id', user.id)
       .maybeSingle();
 
     setProfile(data || null);
+
+    if (data?.facility_id) {
+      const { data: f } = await supabase
+        .from('facilities')
+        .select('id, name')
+        .eq('id', data.facility_id)
+        .maybeSingle();
+      setFacility(f || null);
+    }
   }
 
   const role = profile?.role || '';
@@ -120,9 +142,18 @@ export default function Sidebar() {
           <div className="logoIcon">🏥</div>
           <div>
             <h1>Huzur Sistemi</h1>
-            <span>{role || 'yetkisiz'} panel</span>
+            <span>{roleLabel(role)} panel</span>
           </div>
         </Link>
+
+        <div className="sideProfileCard">
+          <div className="sideAvatar">{(profile?.full_name || email || '?').slice(0, 1).toUpperCase()}</div>
+          <div>
+            <strong>{profile?.full_name || email || 'Kullanıcı'}</strong>
+            <span>{roleLabel(role)}</span>
+          </div>
+          <small>{isFounder ? 'Genel Kontrol' : facility?.name || 'Kurum atanmadı'}</small>
+        </div>
 
         {groups.map((group) => <MenuGroup group={group} key={group.key} />)}
       </aside>
@@ -130,6 +161,11 @@ export default function Sidebar() {
       <style jsx global>{`
         .logoHomeLink{text-decoration:none!important;color:inherit!important;cursor:pointer!important}
         .logoHomeLink:hover{opacity:.92!important}
+        .sideProfileCard{margin:12px 12px 18px;padding:14px;border-radius:18px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:white}
+        .sideAvatar{width:46px;height:46px;border-radius:999px;background:#dbeafe;color:#1e3a8a;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;margin-bottom:10px}
+        .sideProfileCard strong{display:block;font-size:15px;color:white}
+        .sideProfileCard span{display:block;color:#86efac;font-size:13px;font-weight:800;margin-top:3px}
+        .sideProfileCard small{display:block;color:rgba(255,255,255,.72);font-size:12px;margin-top:8px;line-height:1.35}
         .navTitleButton{width:100%!important;border:none!important;background:transparent!important;display:flex!important;align-items:center!important;justify-content:space-between!important;cursor:pointer!important;padding-right:8px!important}
         .navTitleButton b{font-size:18px!important;line-height:1!important;opacity:.75!important}
         .navGroupItems{display:flex!important;flex-direction:column!important;gap:6px!important}
