@@ -127,15 +127,14 @@ export default function Patient360Client({ patientId }: { patientId: string }) {
       setFacility(f || null);
     }
 
-    const safe = async (fn: () => Promise<any>, fallback: any[] = []) => {
-      try {
-        const { data } = await fn();
-        return data || fallback;
-      } catch {
-        return fallback;
-      }
-    };
-
+    const safe = async (fn: () => any, fallback: any[] = []) => {
+  try {
+    const result = await fn();
+    return result?.data || fallback;
+  } catch {
+    return fallback;
+  }
+};
     setRelatives(await safe(() => supabase.from('patient_relatives').select('*').eq('patient_id', patientId).order('is_primary', { ascending: false })));
     setMeds(await safe(() => supabase.from('patient_medicine_plans').select('*').eq('patient_id', patientId).order('created_at', { ascending: false })));
     setVitals(await safe(() => supabase.from('vital_records').select('*').eq('patient_id', patientId).order('measured_at', { ascending: false }).limit(12)));
